@@ -162,7 +162,8 @@ def main():
             )
             # 二维码
             try:
-                qr_img = generate_qr_code(selected_species.get("href"))
+                qr_size = int(min(final_img.width * 0.15, final_img.height * 0.15))
+                qr_img = generate_qr_code(selected_species.get("href"),size=qr_size)
                 qr_pos = (final_img.width - qr_img.width - 10, final_img.height - qr_img.height - 10)
                 final_img.paste(qr_img, qr_pos, qr_img)
             except Exception as e:
