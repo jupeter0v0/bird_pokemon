@@ -86,7 +86,7 @@ def generate_qr_code(data: str, size: int = 200) -> Image.Image:
 
 # ---------------- 主界面 ---------------- #
 def main():
-    st.title("📷 图像倒角 + 水印生成器")
+    st.title("📷 鸟类便捷归档")
 
     # 文件上传
     uploaded_file = st.file_uploader("上传图片文件", type=["jpg", "jpeg", "png"])
