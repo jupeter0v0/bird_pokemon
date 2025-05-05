@@ -6,7 +6,7 @@ import cv2
 import json
 import qrcode
 from datetime import datetime
-
+import tempfile
 st.set_page_config(layout='wide')
 
 
@@ -171,6 +171,15 @@ def main():
         status=st.warning('图片生成中，请稍等........')
         st.image(final_img, caption="✅ 完成图像预览", use_container_width=True)
         status.success('图片生成成功！')
-
+        # 保存到临时文件并提供下载按钮
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp_file:
+            final_img.save(tmp_file, format="PNG")
+            tmp_file.seek(0)
+            btn = st.download_button(
+                label="点击下载图片",
+                data=tmp_file.read(),
+                file_name="bird!.png",
+                mime="image/png"
+            )
 if __name__ == "__main__":
     main()
