@@ -1,6 +1,6 @@
 streamlit
 pillow
-numpy
+numpy==1.22.3
 opencv-python==1.21.2
 json
 qrcode
