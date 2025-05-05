@@ -2,7 +2,7 @@
 
 这是一个基于 [Streamlit](https://streamlit.io/) 的 Web 应用，用于对图像进行倒角、美化背景、添加水印文字和二维码等处理，适用于动植物拍摄图片的快速美化与标注。
 
-![screenshot](assets/screenshot.png) <!-- 可换为你自己的截图路径 -->
+![screenshot](screenshot.png) <!-- 可换为你自己的截图路径 -->
 
 ## ✨ 功能特点
 
