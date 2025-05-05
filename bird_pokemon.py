@@ -1,7 +1,6 @@
 import streamlit as st
 from PIL import Image, ImageDraw, ImageFont, ImageFilter, ImageEnhance
 import numpy as np
-from io import BytesIO
 import cv2
 import json
 import qrcode
@@ -125,16 +124,16 @@ def main():
 
     if uploaded_file and species_name is not None:
         img_raw = Image.open(uploaded_file)
-        img=img_raw.convert('RGBA')
+        img=img_raw.convert('RGB')
         cornered_img = round_image_corners(img, img.width / 50 * corner_radius / 5)
         blurred_bg = adjust_exposure(img_raw, 0.4)
-        blurred_bg = apply_blurred_background(blurred_bg, scale_factor, 1.0, alpha, blur)
+        del img_raw
+        final_img = apply_blurred_background(blurred_bg, scale_factor, 1.0, alpha, blur)
 
         # 阴影处理
         shadow_img = create_shadow(cornered_img, corner_radius, shadow_opacity)
 
-        # 合成背景 + 阴影 + 正图
-        final_img = blurred_bg.copy()
+
         bg_w, bg_h = final_img.size
         fg_w, fg_h = cornered_img.size
 
