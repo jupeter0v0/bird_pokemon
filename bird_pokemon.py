@@ -89,7 +89,7 @@ def main():
     st.title("📷 鸟类便捷归档")
 
     # 文件上传
-    uploaded_file = st.file_uploader("上传图片文件", type=["jpg", "jpeg", "png"])
+    uploaded_file = st.file_uploader("step1.上传图片文件", type=["jpg", "jpeg", "png"])
 
     # 加载物种数据
     with open("物种列表更新.json", "r", encoding="utf-8") as f:
@@ -97,7 +97,7 @@ def main():
 
     # 查询与选择
     col1, col2, col3, col4 = st.columns(4)
-    query = col1.text_input("🔍 输入物种关键词")
+    query = col1.text_input("step2.🔍 输入物种关键词")
     location = col3.text_input("📍 拍摄地点")
     shoot_date = col4.date_input("📅 拍摄日期", value=datetime.today())
 
