@@ -123,7 +123,7 @@ def main():
 
     st.divider()
 
-    if uploaded_file:
+    if uploaded_file and species_name is not None:
         img_raw = Image.open(uploaded_file)
         img=img_raw.convert('RGBA')
         cornered_img = round_image_corners(img, img.width / 50 * corner_radius / 5)
