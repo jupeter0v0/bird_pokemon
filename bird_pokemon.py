@@ -168,9 +168,9 @@ def main():
                 final_img.paste(qr_img, qr_pos, qr_img)
             except Exception as e:
                 st.warning("二维码生成失败")
-
+        status=st.warning('图片生成中，请稍等........')
         st.image(final_img, caption="✅ 完成图像预览", use_container_width=True)
-
+        status.success('图片生成成功！')
 
 if __name__ == "__main__":
     main()
