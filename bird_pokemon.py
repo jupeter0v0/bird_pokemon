@@ -120,9 +120,12 @@ def main():
         shadow_y = st.slider("阴影偏移Y", -10.0, 10.0, 2.0)
         shadow_opacity = st.slider("阴影透明度", 0.0, 2.0, 0.8)
 
+
+
     st.divider()
 
     if uploaded_file and species_name is not None:
+
         img_raw = Image.open(uploaded_file)
         img=img_raw.convert('RGB')
         cornered_img = round_image_corners(img, img.width / 50 * corner_radius / 5)
@@ -160,13 +163,16 @@ def main():
                 text_color,
             )
             # 二维码
-            try:
-                qr_size = int(min(final_img.width * 0.15, final_img.height * 0.15))
-                qr_img = generate_qr_code(selected_species.get("href"),size=qr_size)
-                qr_pos = (final_img.width - qr_img.width - 10, final_img.height - qr_img.height - 10)
-                final_img.paste(qr_img, qr_pos, qr_img)
-            except Exception as e:
-                st.warning("二维码生成失败")
+            col1,col2=st.columns([1,3])
+            dongniao_mark = col1.checkbox("是否添加懂鸟二维码", value=True)
+            if dongniao_mark:
+                try:
+                    qr_size = col2.slider('二维码尺寸',min_value=0, max_value=int(min(final_img.width * 0.30, final_img.height * 0.30)), value=int(min(final_img.width * 0.15, final_img.height * 0.15)))
+                    qr_img = generate_qr_code(selected_species.get("href"),size=qr_size)
+                    qr_pos = (final_img.width - qr_img.width - 10, final_img.height - qr_img.height - 10)
+                    final_img.paste(qr_img, qr_pos, qr_img)
+                except Exception as e:
+                    st.warning("二维码生成失败")
         status=st.warning('图片生成中，请稍等........')
         st.image(final_img, caption="✅ 完成图像预览", use_container_width=True)
         status.success('图片生成成功！')
