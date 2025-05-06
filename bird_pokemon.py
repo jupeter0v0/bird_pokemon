@@ -6,6 +6,7 @@ import json
 import qrcode
 from datetime import datetime
 import tempfile
+import re
 st.set_page_config(layout='wide')
 
 
@@ -150,11 +151,22 @@ def main():
         final_img.paste(cornered_img, pos_fg, cornered_img)
 
         if selected_species:
+            # 在中文和非中文之间加空格
+            # 两边分别处理“中文紧挨非中文” 和 “非中文紧挨中文”的情况
+            text_spaced = re.sub(
+                r'([\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\U00020000-\U0002CEAF])([^\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\U00020000-\U0002CEAF])',
+                r'\1 \2',  selected_species.get("种", ""))
+            text_spaced = re.sub(
+                r'([^\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\U00020000-\U0002CEAF])([\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\U00020000-\U0002CEAF])',
+                r'\1 \2', text_spaced)
+            # 替换多余空格为单个空格，去除首尾空格
+            text_cleaned = re.sub(r'\s+', ' ', text_spaced).strip()
+            
             final_img = draw_watermark(
                 final_img,
                 selected_species.get("目", ""),
                 selected_species.get("科", ""),
-                selected_species.get("种", ""),
+                text_cleaned,
                 shoot_date,
                 location,
                 font_path,
@@ -173,6 +185,14 @@ def main():
                     final_img.paste(qr_img, qr_pos, qr_img)
                 except Exception as e:
                     st.warning("二维码生成失败")
+        pattern = re.compile(
+            r'[\u3400-\u4DBF\u4E00-\u9FFF\uF900-\uFAFF\U00020000-\U0002CEAF]+',
+            flags=re.UNICODE
+        )
+
+        matches = pattern.findall(selected_species.get("种", ""))
+        chinese_text = ''.join(matches)
+
         status=st.warning('图片生成中，请稍等........')
         st.image(final_img, caption="✅ 完成图像预览", use_container_width=True)
         status.success('图片生成成功！')
@@ -183,7 +203,7 @@ def main():
             btn = st.download_button(
                 label="点击下载图片",
                 data=tmp_file.read(),
-                file_name="bird!.png",
+                file_name=f"{chinese_text}-{location}-{shoot_date}.png",
                 mime="image/png"
             )
 if __name__ == "__main__":
