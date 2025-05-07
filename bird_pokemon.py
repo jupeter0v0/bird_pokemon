@@ -7,6 +7,7 @@ import qrcode
 from datetime import datetime
 import tempfile
 import re
+import os
 st.set_page_config(layout='wide')
 
 
@@ -96,19 +97,27 @@ def main():
         species_data = json.load(f)
 
     # 查询与选择
-    col1, col2, col3, col4 = st.columns(4)
-    query = col1.text_input("step2.🔍 输入物种关键词")
-    location = col3.text_input("📍 拍摄地点")
-    shoot_date = col4.date_input("📅 拍摄日期", value=datetime.today())
-
+    col1, col2 = st.columns(2)
+    query = col1.text_input("step2.🔍 输入物种关键词*",placeholder='必填')
     matches = [s for s in species_data if query in s["种"]] if query else []
-    species_name = col2.selectbox("选择匹配物种", [s["种"] for s in matches]) if matches else None
+    species_name = col2.selectbox("step3.选择匹配物种", [s["种"] for s in matches]) if matches else None
     selected_species = next((s for s in species_data if s["种"] == species_name), None)
+
+    col1, col2, col3 = st.columns(3)
+    location = col2.text_input("📍 拍摄地点",placeholder='选填')
+    shoot_date = col3.date_input("📅 拍摄日期", value=datetime.today())
+    author=col1.text_input("署名",placeholder='选填')
+    if len(author) >0:
+        author='@'+author
+
 
     # 设置参数
     with st.expander("🎨 文字设置"):
         font_size = st.slider("字体大小", 1, 50, 12)
-        font_path = st.text_input("字体路径", "NotoSansSC-VariableFont_wght.ttf")
+        fontdir='./Fonts'
+        font_select = st.selectbox("字体路径", os.listdir(fontdir))
+        font_path=os.path.join(fontdir,font_select)
+
         spacing = st.slider("字间距", 0, 10, 2)
         text_color = st.color_picker("文字颜色", "#FFFFFF")
 
@@ -168,7 +177,7 @@ def main():
                 selected_species.get("科", ""),
                 text_cleaned,
                 shoot_date,
-                location,
+                author+location,
                 font_path,
                 int(final_img.width / 45.2 * font_size / 10),
                 spacing,
