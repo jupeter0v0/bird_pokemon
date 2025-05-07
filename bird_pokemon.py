@@ -54,21 +54,122 @@ def adjust_exposure(img: Image.Image, factor: float) -> Image.Image:
 
 
 # ---------------- 水印与二维码 ---------------- #
-def draw_watermark(img: Image.Image, order: str, family: str, species: str, date, location: str,
-                   font_path: str, font_size: int, spacing: int, color: str) -> Image.Image:
+class FontRenderer:
+    def __init__(self, zh_font_path, en_font_path, font_size):
+        try:
+            self.zh_font = ImageFont.truetype(zh_font_path, font_size)
+            self.en_font = ImageFont.truetype(en_font_path, font_size-5)
+        except:
+            # 字体加载失败时使用默认字体
+            default_font = ImageFont.load_default()
+            self.zh_font = self.en_font = default_font
+
+    def _is_chinese(self, char):
+        """判断字符是否为中文（包含中文标点）"""
+        cp = ord(char)
+        return  (0x4E00 <= cp <= 0x9FFF) or (0x3400 <= cp <= 0x4DBF) or  (0x20000 <= cp <= 0x2A6DF) or  (0x2A700 <= cp <= 0x2B73F) or (0x2B740 <= cp <= 0x2B81F) or  (0x2B820 <= cp <= 0x2CEAF) or  (0xF900 <= cp <= 0xFAFF) or (0x2F800 <= cp <= 0x2FA1F) or(0x0030 <= cp <= 0x0039) or (cp == 0x002E)
+
+    def split_text(self, text):
+        """分割混合文本"""
+        parts = []
+        current_part = []
+        current_font = self.zh_font
+
+        for char in text:
+            is_chinese = self._is_chinese(char)
+            target_font = self.zh_font if is_chinese else self.en_font
+
+            if target_font != current_font and current_part:
+                parts.append(("".join(current_part), current_font))
+                current_part = []
+
+            current_font = target_font
+            current_part.append(char)
+
+        if current_part:
+            parts.append(("".join(current_part), current_font))
+
+        return parts
+
+
+def draw_watermark(
+        img: Image.Image,
+        order: str,
+        family: str,
+        species: str,
+        date: datetime,
+        location: str,
+        zh_font_path: str,
+        en_font_path: str,
+        font_size: int,
+        spacing: int,
+        color: str
+) -> Image.Image:
+    """
+    增强版水印绘制函数，支持中英文字体自动切换
+
+    参数：
+    - zh_font_path: 中文字体路径
+    - en_font_path: 英文字体路径
+    - 其他参数同原函数
+    """
     draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype(font_path, font_size)
+    renderer = FontRenderer(zh_font_path, en_font_path, font_size)
 
-    def centered_text(text, y_offset):
-        bbox = draw.textbbox((0, 0), text, font=font)
-        text_width, text_height = bbox[2] - bbox[0], bbox[3] - bbox[1]
-        x = (img.width - text_width) // 2
-        y = img.height - y_offset - text_height
-        draw.text((x, y), text, font=font, fill=color)
+    def draw_centered_mixed_text(text, y_offset, vertical_align='center'):
+        # 分割文本为多个片段
+        parts = renderer.split_text(text)
 
-    centered_text(f"{order} ———— {family}", font_size * 4)
-    centered_text(species, font_size * 8 // 3)
-    centered_text(f"{location}       {date.strftime('%Y.%m.%d')}", font_size * 4 // 3)
+        # 计算每个片段的尺寸
+        sizes = [draw.textbbox((0, 0), p[0], font=p[1]) for p in parts]
+        heights = [s[3] - s[1] for s in sizes]
+        max_height = max(heights)
+
+        # 计算总宽度
+        total_width = sum(s[2] - s[0] for s in sizes)
+
+        # 起始位置（水平居中）
+        start_x = (img.width - total_width) // 2
+        base_y = img.height - y_offset - max_height  # 基线参考点为底部对齐的 y
+
+        # 根据垂直对齐方式调整 y 偏移
+        def get_y_offset(box_height):
+            if vertical_align == 'top':
+                return base_y
+            elif vertical_align == 'center':
+                return base_y + (max_height - box_height) // 2
+            elif vertical_align == 'bottom':
+                return base_y + (max_height - box_height)
+            else:
+                raise ValueError("vertical_align must be 'top', 'center', or 'bottom'")
+
+        # 绘制所有片段
+        x = start_x
+        bboxes = []
+        for (text_part, font), box in zip(parts, sizes):
+            box_height = box[3] - box[1]
+            y = get_y_offset(box_height)
+            bbox = draw.textbbox((x, y), text_part, font=font)
+            draw.text((x, y), text_part, font=font, fill=color)
+            x = bbox[2]
+            bboxes.append(bbox)
+
+        # 返回合并后的边界框
+        return (
+            min(b[0] for b in bboxes),
+            min(b[1] for b in bboxes),
+            max(b[2] for b in bboxes),
+            max(b[3] for b in bboxes)
+        )
+    # 绘制三行水印
+    line1 = f"{order} ———— {family}"
+    line2 = species
+    line3 = f"{location}       {date.strftime('%Y.%m.%d')}"
+
+    draw_centered_mixed_text(line1, font_size * 4)
+    draw_centered_mixed_text(line2, font_size * 8 // 3)
+    draw_centered_mixed_text(line3, font_size * 4 // 3)
+
     return img
 
 
@@ -115,8 +216,11 @@ def main():
     with st.expander("🎨 文字设置"):
         font_size = st.slider("字体大小", 1, 50, 12)
         fontdir='./Fonts'
-        font_select = st.selectbox("字体路径", os.listdir(fontdir))
-        font_path=os.path.join(fontdir,font_select)
+        col1,col2=st.columns(2)
+        cn_font_select = col1.selectbox("中文字体路径", os.listdir(fontdir))
+        en_font_select = col2.selectbox("英文字体路径", os.listdir(fontdir))
+        cn_font_select=os.path.join(fontdir,cn_font_select)
+        en_font_select = os.path.join(fontdir, en_font_select)
 
         spacing = st.slider("字间距", 0, 10, 2)
         text_color = st.color_picker("文字颜色", "#FFFFFF")
@@ -178,7 +282,8 @@ def main():
                 text_cleaned,
                 shoot_date,
                 author+location,
-                font_path,
+                cn_font_select,
+                en_font_select,
                 int(final_img.width / 45.2 * font_size / 10),
                 spacing,
                 text_color,
