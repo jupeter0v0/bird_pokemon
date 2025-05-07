@@ -164,7 +164,7 @@ def draw_watermark(
     # 绘制三行水印
     line1 = f"{order} ———— {family}"
     line2 = species
-    line3 = f"{location}       {date.strftime('%Y.%m.%d')}"
+    line3 = f"{location}{date.strftime('%Y.%m.%d')}"
 
     draw_centered_mixed_text(line1, font_size * 4)
     draw_centered_mixed_text(line2, font_size * 8 // 3)
@@ -210,8 +210,8 @@ def main():
     author=col1.text_input("署名",placeholder='选填')
     if len(author) >0:
         author='@'+author+'       '
-
-
+    if len(location) > 0:
+        location = location + '       '
     # 设置参数
     with st.expander("🎨 文字设置"):
         font_size = st.slider("字体大小", 1, 50, 12)
