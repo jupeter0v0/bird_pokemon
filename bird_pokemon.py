@@ -108,7 +108,7 @@ def main():
     shoot_date = col3.date_input("📅 拍摄日期", value=datetime.today())
     author=col1.text_input("署名",placeholder='选填')
     if len(author) >0:
-        author='@'+author
+        author='@'+author+'       '
 
 
     # 设置参数
