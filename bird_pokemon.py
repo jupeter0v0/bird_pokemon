@@ -116,7 +116,7 @@ def draw_watermark(
     draw = ImageDraw.Draw(img)
     renderer = FontRenderer(zh_font_path, en_font_path, font_size)
 
-    def draw_centered_mixed_text(text, y_offset, vertical_align='center'):
+    def draw_centered_mixed_text(text, y_offset, vertical_align='bottom'):
         # 分割文本为多个片段
         parts = renderer.split_text(text)
 
@@ -217,8 +217,9 @@ def main():
         font_size = st.slider("字体大小", 1, 50, 12)
         fontdir='./Fonts'
         col1,col2=st.columns(2)
-        cn_font_select = col1.selectbox("中文字体路径", os.listdir(fontdir))
-        en_font_select = col2.selectbox("英文字体路径", os.listdir(fontdir))
+
+        cn_font_select = col1.selectbox("中文字体路径", os.listdir(fontdir),index=os.listdir(fontdir).index('AlibabaPuHuiTi-2-35-Thin.ttf'))
+        en_font_select = col2.selectbox("英文字体路径", os.listdir(fontdir),index=os.listdir(fontdir).index('chillendsscript-ov3zo.otf'))
         cn_font_select=os.path.join(fontdir,cn_font_select)
         en_font_select = os.path.join(fontdir, en_font_select)
 
